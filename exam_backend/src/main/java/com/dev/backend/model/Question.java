@@ -10,6 +10,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Table(name="questions")
 @Entity
@@ -26,7 +28,7 @@ public class Question {
     private String questionText;
 
     @Enumerated(EnumType.STRING)
-    private QuestionType questionType = QuestionType.MCQ;
+    private QuestionType questionType ;
 
     @Column(nullable = false)
     private int marks;
@@ -44,5 +46,8 @@ public class Question {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Option> options = new ArrayList<>();
 
 }
