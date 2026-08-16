@@ -12,7 +12,7 @@ import java.util.*;
 
 
 @RestController
-@RequestMapping("/api/instructor/question")
+@RequestMapping("/api/question")
 public class QuestionController {
 
     private final QuestionService questionService;
@@ -21,7 +21,7 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
-    @PostMapping("{examId}/add")
+    @PostMapping("/add/{examId}")
     public ResponseEntity<String> addQuestion(@PathVariable long examId,
                                               @RequestBody QuestionRequestDTO question){
         questionService.addQuestion(examId,question);

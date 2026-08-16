@@ -90,6 +90,12 @@ public class ExamService {
             .collect(Collectors.toList());
     }
 
+    public List<ExamResponseDTO> getPublishedExams(){
+        return examRepo.findByExamState(ExamState.PUBLISHED).stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Get exam by ID
      * @param id Exam ID

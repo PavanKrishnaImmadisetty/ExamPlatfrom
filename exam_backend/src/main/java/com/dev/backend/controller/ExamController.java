@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/instructor/exams")
+@RequestMapping("/api/exam")
 public class ExamController {
 
     private final ExamService examService;
@@ -32,6 +32,12 @@ public class ExamController {
 
         Exam exam = examService.getExamById(id);
         return new ResponseEntity<>(exam,HttpStatus.OK);
+    }
+
+    @GetMapping("/getPublishedExams/")
+    public ResponseEntity<List<ExamResponseDTO>> getAllPublishedExams(){
+        List<ExamResponseDTO> exams = examService.getPublishedExams();
+        return new ResponseEntity<>(exams,HttpStatus.OK);
     }
 
     @GetMapping("/getByInstructor/{instructorId}")

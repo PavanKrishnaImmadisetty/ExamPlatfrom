@@ -17,7 +17,7 @@ import java.util.List;
  * Handles all user-related API endpoints for registration and retrieval
  */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/user")
 public class UserController {
 
     private final UserService userService;
@@ -30,35 +30,12 @@ public class UserController {
         this.userService = userService;
     }
 
-    /**
-     * Register a new user in the system
-     * POST /api/users/register
-     * @param user User object with registration details
-     * @return ApiResponse with success message
-     */
-    @PostMapping("/auth/register")
-    public ResponseEntity<ApiResponse<Void>> registerUser(@Valid @RequestBody SignUpRequestDTO user){
-        // Set default status to ACTIVE for new users
-
-        userService.registerUser(user);
-        return new ResponseEntity<>(
-            new ApiResponse<>(HttpStatus.CREATED.value(), "User registered successfully"),
-            HttpStatus.CREATED
-        );
+    @GetMapping("/")
+    public String test() {
+        return "authorization working";
     }
 
-    @PostMapping("/auth/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequestDTO loginRequest){
-        String token = userService.loginUser(loginRequest);
-        return new ResponseEntity<>(token,HttpStatus.OK);
-    }
 
-    /**
-     * Alternative endpoint for user registration (kept for backwards compatibility)
-     * POST /api/users/add
-     * @param user User object
-     * @return ApiResponse with success message
-     */
 
 
     /**
@@ -67,7 +44,7 @@ public class UserController {
      * @param id User ID
      * @return ApiResponse with user details
      */
-    @GetMapping("/{id}")
+    @GetMapping("/get/{id}")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getUserById(@PathVariable Long id){
         UserResponseDTO user = userService.getUserById(id);
         return new ResponseEntity<>(
@@ -80,9 +57,9 @@ public class UserController {
      * Get user by email
      * GET /api/users/email/{email}
      * @param email User email
-     * @return ApiResponse with user details
+     * @return ApiResponse with user details2
      */
-    @GetMapping("/email/{email}")
+    @GetMapping("/getbyemail/{email}")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getUserByEmail(@PathVariable String email){
         UserResponseDTO user = userService.getUserByEmail(email);
         return new ResponseEntity<>(
@@ -96,7 +73,7 @@ public class UserController {
      * GET /api/users/all
      * @return ApiResponse with list of all users
      */
-    @GetMapping("/all")
+    @GetMapping("/getall")
     public ResponseEntity<ApiResponse<List<UserResponseDTO>>> getAllUsers(){
         List<UserResponseDTO> users = userService.getAllUsers();
         return new ResponseEntity<>(
