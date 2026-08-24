@@ -34,7 +34,7 @@ public class ExamController {
         return new ResponseEntity<>(exam,HttpStatus.OK);
     }
 
-    @GetMapping("/getPublishedExams/")
+    @GetMapping("/getPublishedExams")
     public ResponseEntity<List<ExamResponseDTO>> getAllPublishedExams(){
         List<ExamResponseDTO> exams = examService.getPublishedExams();
         return new ResponseEntity<>(exams,HttpStatus.OK);

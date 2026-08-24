@@ -36,7 +36,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         );
         final String authHeader = request.getHeader("Authorization");
 
+        System.out.println("HEADER: " + authHeader);
+
         if(authHeader == null || !authHeader.startsWith("Bearer ")){
+
+            System.out.println("ERROR: Header is null or missing 'Bearer ' prefix");
             filterChain.doFilter(request,response);
             return;
         }
@@ -45,13 +49,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         //come here later
         String username = jwtService.extractUsername(jwt);
 
+        System.out.println("username: " + username);
+
         if (username != null &&
                 SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails =
                     userDetailsService.loadUserByUsername(username);
 
+            System.out.println("USER DETAILS LOADED: " + userDetails.getUsername());
+
             if (jwtService.isTokenValid(jwt, userDetails)) {
+
+                System.out.println("USER AUTHORITIES: " + userDetails.getAuthorities());
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(

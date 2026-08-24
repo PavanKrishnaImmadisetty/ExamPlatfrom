@@ -82,12 +82,12 @@
 		</dependency>
 
 		<!-- dependency for automatic server restart after code changes -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<version>4.1.0</version>
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.boot</groupId>-->
+<!--			<artifactId>spring-boot-devtools</artifactId>-->
+<!--			<version>4.1.0</version>-->
 
-		</dependency>
+<!--		</dependency>-->
 
 		<!-- DEPEDENCY FOR jWT -->
 

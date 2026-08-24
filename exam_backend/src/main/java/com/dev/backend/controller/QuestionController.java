@@ -51,6 +51,7 @@ public class QuestionController {
 
     @GetMapping("/getAll/{examId}")
     public ResponseEntity<List<QuestionResponseDTO>> getAllQuestions(@PathVariable Long examId){
+
         List<QuestionResponseDTO> qts = questionService.getAllQuestionsByExam(examId);
         return new ResponseEntity<>(qts,HttpStatus.OK);
     }
