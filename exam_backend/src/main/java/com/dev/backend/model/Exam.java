@@ -2,25 +2,30 @@ package com.dev.backend.model;
 
 
 import com.dev.backend.enums.ExamState;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import java.util.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name="exams")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Exam {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     private String examTitle;
@@ -29,19 +34,26 @@ public class Exam {
     private String examDescription;
 
     @Column(nullable = false)
-    private String examDate;
+    private LocalDateTime examDate;
 
     @Column(nullable = false)
     private int examDuration;
 
     @Column(nullable = false)
+    private LocalDateTime examStartTime;
+
+    @Column(nullable = false)
+    private LocalDateTime examEndTime;
+
+    @Column(nullable = false)
     private int marks;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private ExamState examState = ExamState.DRAFT;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="creator_id", referencedColumnName = "id",nullable = false)
+    @JoinColumn(name="creator_id", referencedColumnName = "id", nullable = false)
     private User creator;
 
     @CreationTimestamp
@@ -53,5 +65,18 @@ public class Exam {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "exam", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Question> questions;
+    @Builder.Default
+    private List<Question> questions = new ArrayList<>();
+
+    // --- JPA Bidirectional Synchronization Methods ---
+
+    public void addQuestion(Question question) {
+        questions.add(question);
+        question.setExam(this);
+    }
+
+    public void removeQuestion(Question question) {
+        questions.remove(question);
+        question.setExam(null);
+    }
 }

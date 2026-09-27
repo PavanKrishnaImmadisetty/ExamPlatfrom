@@ -28,10 +28,14 @@ public class ExamResponseDTO {
     private String examDescription;
 
     // Exam scheduled date
-    private String examDate;
+    private LocalDateTime examDate;
 
     // Exam duration in minutes
     private int examDuration;
+
+    private LocalDateTime examStartTime;
+
+    private LocalDateTime examEndTime;
 
     // Total marks for exam
     private int marks;

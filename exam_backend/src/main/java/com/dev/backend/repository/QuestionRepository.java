@@ -1,13 +1,14 @@
 package com.dev.backend.repository;
 
-import com.dev.backend.DTO.QuestionResponseDTO;
-import com.dev.backend.model.Question;
+import org.aspectj.weaver.patterns.TypePatternQuestions;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.*;
+import java.util.List;
+import com.dev.backend.model.Question;
 
 @Repository
-public interface QuestionRepository extends JpaRepository<Question,Long> {
+public interface QuestionRepository extends JpaRepository<Question, Long> {
 
-    Optional<List<Question>> findByExamId(Long examId);
+    // Fixed: Removed Optional wrapper
+    List<Question> findByExamId(Long examId);
 }

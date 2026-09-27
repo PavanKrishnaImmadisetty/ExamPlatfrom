@@ -2,9 +2,11 @@ package com.dev.backend.controller;
 
 import com.dev.backend.DTO.QuestionRequestDTO;
 import com.dev.backend.DTO.QuestionResponseDTO;
+import com.dev.backend.model.User;
 import com.dev.backend.service.QuestionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
@@ -12,7 +14,7 @@ import java.util.*;
 
 
 @RestController
-@RequestMapping("/api/question")
+@RequestMapping("/api/questions") // Pluralized
 public class QuestionController {
 
     private final QuestionService questionService;
@@ -21,38 +23,37 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
-    @PostMapping("/add/{examId}")
-    public ResponseEntity<String> addQuestion(@PathVariable long examId,
+    @PostMapping("/exam/{examId}")
+    public ResponseEntity<String> addQuestion(@AuthenticationPrincipal User currentUser,
+                                              @PathVariable long examId,
                                               @RequestBody QuestionRequestDTO question){
-        questionService.addQuestion(examId,question);
-        return new ResponseEntity<>("Question added successfully", HttpStatus.OK);
+        // Secure: Pass currentUser to verify ownership
+        questionService.addQuestion(currentUser, examId, question);
+        return new ResponseEntity<>("Question added successfully", HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/delete/{questionId}")
-    public ResponseEntity<String> deleteQuestion(@PathVariable long questionId){
-        questionService.deleteQuestion(questionId);
-        return new ResponseEntity<>("Question deleted succesfully",HttpStatus.OK);
-
+    @DeleteMapping("/{questionId}")
+    public ResponseEntity<String> deleteQuestion(@AuthenticationPrincipal User currentUser,
+                                                 @PathVariable long questionId){
+        questionService.deleteQuestion(currentUser, questionId);
+        return new ResponseEntity<>("Question deleted successfully", HttpStatus.OK);
     }
 
-    @PutMapping("/update/{questionId}")
-    public ResponseEntity<String> updateQuestion(@PathVariable long questionId,
+    @PutMapping("/{questionId}")
+    public ResponseEntity<String> updateQuestion(@AuthenticationPrincipal User currentUser,
+                                                 @PathVariable long questionId,
                                                  @RequestBody QuestionRequestDTO question){
-        questionService.updateQuestion(questionId,question);
-        return new ResponseEntity<>("Question updated successfully",HttpStatus.OK);
+        questionService.updateQuestion(currentUser, questionId, question);
+        return new ResponseEntity<>("Question updated successfully", HttpStatus.OK);
     }
 
-    @GetMapping("/get/{questionId}")
+    @GetMapping("/{questionId}")
     public ResponseEntity<QuestionResponseDTO> getQuestionById(@PathVariable long questionId){
-        QuestionResponseDTO qt = questionService.getQuestionById(questionId);
-        return new ResponseEntity<>(qt,HttpStatus.OK);
-
+        return new ResponseEntity<>(questionService.getQuestionById(questionId), HttpStatus.OK);
     }
 
-    @GetMapping("/getAll/{examId}")
+    @GetMapping("/exam/{examId}")
     public ResponseEntity<List<QuestionResponseDTO>> getAllQuestions(@PathVariable Long examId){
-
-        List<QuestionResponseDTO> qts = questionService.getAllQuestionsByExam(examId);
-        return new ResponseEntity<>(qts,HttpStatus.OK);
+        return new ResponseEntity<>(questionService.getAllQuestionsByExam(examId), HttpStatus.OK);
     }
 }

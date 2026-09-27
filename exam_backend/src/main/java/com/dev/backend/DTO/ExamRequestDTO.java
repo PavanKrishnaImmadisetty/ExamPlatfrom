@@ -1,4 +1,6 @@
 package com.dev.backend.DTO;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import jakarta.validation.Valid;
@@ -24,7 +26,13 @@ public class ExamRequestDTO {
 
     // Exam date - cannot be empty or null
     @NotBlank(message = "Exam date cannot be empty")
-    private String examDate;
+    private LocalDateTime examDate;
+
+    @NotNull(message="Exam start time cannot be null")
+    private LocalDateTime examStartTime;
+
+    @NotNull(message="Exam end time cannot be null")
+    private LocalDateTime examEndTime;
 
     // Exam duration in minutes - must be positive
     @NotNull(message = "Exam duration cannot be null")

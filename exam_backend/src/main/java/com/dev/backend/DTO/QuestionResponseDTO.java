@@ -34,6 +34,8 @@ public class QuestionResponseDTO {
     // Order/sequence of question
     private int questionOrder;
 
+    private Integer numericAnswer;
+
     // Associated exam ID
     private Long examId;
 

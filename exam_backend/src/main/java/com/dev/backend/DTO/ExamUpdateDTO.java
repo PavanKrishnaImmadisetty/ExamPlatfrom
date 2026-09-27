@@ -1,9 +1,12 @@
 package com.dev.backend.DTO;
 
+import com.dev.backend.enums.ExamState;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 /**
  * DTO for updating exam details
@@ -26,7 +29,13 @@ public class ExamUpdateDTO {
 
     // Updated exam date
     @NotBlank(message = "Exam date cannot be empty")
-    private String examDate;
+    private LocalDateTime examDate;
+
+    @NotBlank(message = "Exam start time cannot be empty")
+    private LocalDateTime examStartTime;
+
+    @NotBlank(message = "Exam start time cannot be empty")
+    private LocalDateTime examEndTime;
 
     // Updated exam duration
     @NotNull(message = "Exam duration cannot be null")
@@ -39,4 +48,6 @@ public class ExamUpdateDTO {
     @Min(value = 1, message = "Marks must be at least 1")
     @Max(value = 1000, message = "Marks cannot exceed 1000")
     private int marks;
+
+    private ExamState examState;
 }

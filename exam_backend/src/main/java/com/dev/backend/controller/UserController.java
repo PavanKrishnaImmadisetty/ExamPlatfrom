@@ -1,100 +1,100 @@
 package com.dev.backend.controller;
 
 import com.dev.backend.DTO.*;
+
 import com.dev.backend.enums.Role;
-import com.dev.backend.enums.Status;
-import com.dev.backend.model.User;
 import com.dev.backend.service.UserService;
-import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST Controller for User management
  * Handles all user-related API endpoints for registration and retrieval
  */
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users") // Pluralized to REST standards
 public class UserController {
 
     private final UserService userService;
 
-    /**
-     * Constructor for dependency injection
-     * @param userService UserService instance
-     */
     public UserController(UserService userService){
         this.userService = userService;
     }
 
-    @GetMapping("/")
+    @GetMapping("/test")
     public String test() {
         return "authorization working";
     }
 
-
-
-
-    /**
-     * Get user by ID
-     * GET /api/users/{id}
-     * @param id User ID
-     * @return ApiResponse with user details
-     */
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getUserById(@PathVariable Long id){
-        UserResponseDTO user = userService.getUserById(id);
-        return new ResponseEntity<>(
-            new ApiResponse<>(HttpStatus.OK.value(), "User retrieved successfully", user),
-            HttpStatus.OK
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "User retrieved successfully", userService.getUserById(id))
         );
     }
 
-    /**
-     * Get user by email
-     * GET /api/users/email/{email}
-     * @param email User email
-     * @return ApiResponse with user details2
-     */
-    @GetMapping("/getbyemail/{email}")
+    @GetMapping("/email/{email}")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getUserByEmail(@PathVariable String email){
-        UserResponseDTO user = userService.getUserByEmail(email);
-        return new ResponseEntity<>(
-            new ApiResponse<>(HttpStatus.OK.value(), "User retrieved successfully", user),
-            HttpStatus.OK
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "User retrieved successfully", userService.getUserByEmail(email))
         );
     }
 
-    /**
-     * Get all users in the system
-     * GET /api/users/all
-     * @return ApiResponse with list of all users
-     */
-    @GetMapping("/getall")
+    // STRICTLY ADMIN ONLY
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
     public ResponseEntity<ApiResponse<List<UserResponseDTO>>> getAllUsers(){
-        List<UserResponseDTO> users = userService.getAllUsers();
-        return new ResponseEntity<>(
-            new ApiResponse<>(HttpStatus.OK.value(), "Users retrieved successfully", users),
-            HttpStatus.OK
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "Users retrieved successfully", userService.getAllUsers())
         );
     }
 
-    /**
-     * Check if email already exists
-     * GET /api/users/check-email/{email}
-     * @param email Email to check
-     * @return ApiResponse with boolean result
-     */
+    // STRICTLY ADMIN ONLY - Dashboard Stats
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getUserStats() {
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "User stats retrieved", userService.getUserStats())
+        );
+    }
+
+    // STRICTLY ADMIN ONLY - Promote/Demote User
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/role")
+    public ResponseEntity<ApiResponse<String>> updateUserRole(
+            @PathVariable Long id,
+            @RequestParam Role newRole) {
+
+        userService.updateUserRole(id, newRole);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "User role updated successfully to " + newRole, null)
+        );
+    }
+
+    // STRICTLY ADMIN ONLY - Toggle User Status
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/toggle-status")
+    public ResponseEntity<ApiResponse<String>> toggleUserStatus(@PathVariable Long id) {
+
+        String newStatus = userService.toggleUserStatus(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "User status updated to: " + newStatus, null)
+        );
+    }
+
     @GetMapping("/check-email/{email}")
     public ResponseEntity<ApiResponse<Boolean>> checkEmailExists(@PathVariable String email){
         boolean exists = userService.emailExists(email);
-        String message = exists ? "Email already exists" : "Email is available";
-        return new ResponseEntity<>(
-            new ApiResponse<>(HttpStatus.OK.value(), message, exists),
-            HttpStatus.OK
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), exists ? "Email already exists" : "Email is available", exists)
         );
     }
 }

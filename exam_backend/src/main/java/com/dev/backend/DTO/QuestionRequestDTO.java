@@ -38,6 +38,8 @@ public class QuestionRequestDTO {
     @Min(value = 1, message = "Question order must start from 1")
     private int questionOrder;
 
+    private Integer numericAnswer;
+
     // List of options for this question
     @NotEmpty(message = "Options list cannot be empty")
     @Valid

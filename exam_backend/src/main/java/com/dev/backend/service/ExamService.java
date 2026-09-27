@@ -10,8 +10,10 @@ import com.dev.backend.model.User;
 import com.dev.backend.repository.ExamRepository;
 import com.dev.backend.repository.QuestionRepository;
 import com.dev.backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,35 +46,29 @@ public class ExamService {
      * @param exam ExamRequestDTO containing exam details and questions
      * @throws RuntimeException if creator user not found
      */
-    public void createExam(long instructorId,ExamRequestDTO exam){
-
-        // Create new Exam object
+    @Transactional
+    public void createExam(User creator, ExamRequestDTO exam) {
         Exam obj = new Exam();
 
-        // Fetch and validate creator/instructor
-        User creator = userRepo.findById(instructorId).
-                orElseThrow(() -> new RuntimeException("User not found with ID: " + instructorId));
-
-        // Set exam properties from DTO
+        // No need to fetch from userRepo, the creator is already verified via JWT!
         obj.setExamTitle(exam.getExamTitle());
         obj.setExamDescription(exam.getExamDescription());
         obj.setExamDate(exam.getExamDate());
+        obj.setExamStartTime(exam.getExamStartTime());
+        obj.setExamEndTime(exam.getExamEndTime());
         obj.setExamDuration(exam.getExamDuration());
         obj.setMarks(exam.getMarks());
         obj.setCreator(creator);
-        obj.setExamState(ExamState.DRAFT); // New exams start in DRAFT state
+        obj.setExamState(ExamState.DRAFT);
 
-        // Save exam to database
         examRepo.save(obj);
 
-        // Add questions if provided
         if(exam.getQuestions() != null && !exam.getQuestions().isEmpty()){
             for(QuestionRequestDTO questionDTO : exam.getQuestions()){
-                questionService.addQuestion(obj.getId(), questionDTO);
+                questionService.addQuestion(creator, obj.getId(), questionDTO);
             }
         }
     }
-
     /**
      * Get all exams created by a specific instructor
      * @param creator Instructor/Creator ID
@@ -134,9 +130,11 @@ public class ExamService {
         obj.setExamTitle(exam.getExamTitle());
         obj.setExamDescription(exam.getExamDescription());
         obj.setExamDate(exam.getExamDate());
+        obj.setExamStartTime(exam.getExamStartTime());
+        obj.setExamEndTime(exam.getExamEndTime());
         obj.setExamDuration(exam.getExamDuration());
         obj.setMarks(exam.getMarks());
-
+        obj.setExamState(exam.getExamState());
         // Save updated exam
         examRepo.save(obj);
     }
@@ -169,6 +167,29 @@ public class ExamService {
         examRepo.save(exam);
     }
 
+    //service toggling exam status
+    @Transactional
+
+    public String toggleExamState(long id,String userEmail){
+
+        Exam exam = examRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Exam not found with ID: " + id));
+
+        if(!exam.getCreator().getEmail().equals(userEmail)){
+            throw new RuntimeException("Access Denied: You cannot modify an exam you did not create.");
+        }
+
+        if (exam.getExamState() == ExamState.DRAFT) {
+            exam.setExamState(ExamState.PUBLISHED);
+        } else {
+            exam.setExamState(ExamState.DRAFT);
+        }
+
+        examRepo.save(exam);
+        return exam.getExamState().name();
+
+    }
+
     /**
      * Convert Exam entity to ExamResponseDTO
      * @param exam Exam entity
@@ -180,6 +201,8 @@ public class ExamService {
             .examTitle(exam.getExamTitle())
             .examDescription(exam.getExamDescription())
             .examDate(exam.getExamDate())
+                .examStartTime(exam.getExamStartTime())
+                .examEndTime(exam.getExamEndTime())
             .examDuration(exam.getExamDuration())
             .marks(exam.getMarks())
             .examState(exam.getExamState())

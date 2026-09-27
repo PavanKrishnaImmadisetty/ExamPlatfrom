@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OptionRequestDTO {
 
+    private Long id;
+
     // Option text - cannot be empty
     @NotBlank(message = "Option text cannot be empty")
     @Size(min = 1, max = 200, message = "Option text must be between 1 and 200 characters")
@@ -22,6 +24,5 @@ public class OptionRequestDTO {
 
     // Flag indicating if this is the correct option
     private boolean isCorrect;
-
 
 }

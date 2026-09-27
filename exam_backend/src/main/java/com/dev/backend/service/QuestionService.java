@@ -4,138 +4,144 @@ import com.dev.backend.DTO.OptionRequestDTO;
 import com.dev.backend.DTO.OptionResponseDTO;
 import com.dev.backend.DTO.QuestionRequestDTO;
 import com.dev.backend.DTO.QuestionResponseDTO;
+import com.dev.backend.enums.QuestionType;
 import com.dev.backend.model.Exam;
 import com.dev.backend.model.Option;
 import com.dev.backend.model.Question;
+import com.dev.backend.model.User;
 import com.dev.backend.repository.ExamRepository;
 import com.dev.backend.repository.QuestionRepository;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Service layer for Question management
- * Handles business logic for question operations with associated options
- */
 @Service
 public class QuestionService {
 
     private final QuestionRepository questionRepo;
     private final ExamRepository examRepo;
 
-    /**
-     * Constructor for dependency injection
-     * @param questionRepo QuestionRepository instance
-     * @param examRepo ExamRepository instance
-     */
-    public QuestionService(QuestionRepository questionRepo,ExamRepository examRepo){
+    public QuestionService(QuestionRepository questionRepo, ExamRepository examRepo){
         this.questionRepo = questionRepo;
         this.examRepo = examRepo;
     }
 
-    /**
-     * Add a question with options to an exam
-     * @param examId Exam ID
-     * @param question QuestionRequestDTO containing question and option details
-     * @throws RuntimeException if exam not found
-     */
-    public void addQuestion(long examId, QuestionRequestDTO question){
+    @Transactional
+    public void addQuestion(User currentUser, long examId, QuestionRequestDTO question){
+        Exam exam = examRepo.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Exam not found with ID: " + examId));
 
-        // Fetch exam by ID, throw error if not found
-        Exam exam = examRepo.findById(examId).orElseThrow(()-> new RuntimeException("Exam not found with ID: "+examId));
+        // SECURITY: Verify the person adding the question is the exam creator
+        if (!exam.getCreator().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Access Denied: You do not own this exam.");
+        }
 
-        // Create new Question object
         Question obj = new Question();
-
-        // Set question properties from DTO
         obj.setQuestionText(question.getQuestionText());
         obj.setQuestionType(question.getQuestionType());
         obj.setMarks(question.getMarks());
         obj.setQuestionOrder(question.getQuestionOrder());
-
-        // Associate question with exam
         obj.setExam(exam);
 
-        // Create and populate options for the question
-        List<Option> options = new ArrayList<>();
-        for(OptionRequestDTO option : question.getOptions()){
-            Option optObj = new Option();
+        obj.setNumericAnswer(question.getNumericAnswer());
 
-            // Set option text
-            optObj.setOptionText(option.getOptionText());
+        // FIX: Use the bidirectional helper method to sync Options safely
+        if (question.getQuestionType() != QuestionType.NUMERIC && question.getOptions() != null) {
+            for (OptionRequestDTO optionDTO : question.getOptions()) {
+                Option optObj = new Option();
+                optObj.setOptionText(optionDTO.getOptionText());
+                optObj.setCorrect(optionDTO.isCorrect());
 
-            // Set if this option is correct
-            optObj.setCorrect(option.isCorrect());
-
-            // Associate option with question
-            optObj.setQuestion(obj);
-
-            options.add(optObj);
+                obj.addOption(optObj); // Keeps Java and DB in perfect sync
+            }
         }
 
-        // Set all options to question
-        obj.setOptions(options);
-
-        // Save question with cascading options
         questionRepo.save(obj);
-
     }
 
-
-
-    /**
-     * Delete a question and its associated options
-     * @param questionId Question ID
-     * @throws RuntimeException if question not found
-     */
-    public void deleteQuestion(long questionId){
+    @Transactional
+    public void deleteQuestion(User currentUser, long questionId){
         Question question = questionRepo.findById(questionId).orElseThrow(()->
-            new RuntimeException("Question not found with ID: "+questionId));
+                new RuntimeException("Question not found with ID: "+questionId));
+
+        if (!question.getExam().getCreator().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Access Denied: You do not own this exam.");
+        }
+
         questionRepo.delete(question);
     }
 
-    /**
-     * Get a specific question by ID as ResponseDTO
-     * @param questionId Question ID
-     * @return QuestionResponseDTO
-     */
-    public QuestionResponseDTO getQuestionById(long questionId){
-        Question question = questionRepo.findById(questionId).orElseThrow(()->
-            new RuntimeException("Question not found with ID: "+questionId));
-        return convertToResponseDTO(question);
-    }
 
-    /**
-     * Update question details
-     * Note: Options cannot be updated through this method
-     * @param questionId Question ID
-     * @param questionDTO QuestionRequestDTO with updated values
-     */
-    public void updateQuestion(long questionId, QuestionRequestDTO questionDTO){
-        Question question = questionRepo.findById(questionId).orElseThrow(()->
-            new RuntimeException("Question not found with ID: "+questionId));
 
-        // Update question properties
+// ... inside QuestionService ...
+
+    @Transactional
+    public void updateQuestion(User currentUser, long questionId, QuestionRequestDTO questionDTO){
+        Question question = questionRepo.findById(questionId).orElseThrow(()->
+                new RuntimeException("Question not found with ID: "+questionId));
+
+        if (!question.getExam().getCreator().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Access Denied: You do not own this exam.");
+        }
+
+        // 1. Update standard fields
         question.setQuestionText(questionDTO.getQuestionText());
         question.setQuestionType(questionDTO.getQuestionType());
         question.setMarks(questionDTO.getMarks());
         question.setQuestionOrder(questionDTO.getQuestionOrder());
+        question.setNumericAnswer(questionDTO.getNumericAnswer()); // Keep this from our last step!
 
-        // Save updated question
+        // 2. Safely Update Options
+        if (questionDTO.getQuestionType() != QuestionType.NUMERIC && questionDTO.getOptions() != null) {
+
+            // Map existing options by their ID for fast lookup
+            Map<Long, Option> existingOptions = question.getOptions().stream()
+                    .collect(Collectors.toMap(Option::getId, opt -> opt));
+
+            // Clear the list (Hibernate won't delete them immediately, it waits to see what we add back)
+            question.getOptions().clear();
+
+            for (OptionRequestDTO optDTO : questionDTO.getOptions()) {
+                if (optDTO.getId() != null && existingOptions.containsKey(optDTO.getId())) {
+                    // Update existing option
+                    Option existingOpt = existingOptions.get(optDTO.getId());
+                    existingOpt.setOptionText(optDTO.getOptionText());
+                    existingOpt.setCorrect(optDTO.isCorrect());
+                    question.addOption(existingOpt);
+                } else {
+                    // It has no ID, so it's a brand-new option added during the edit
+                    Option newOpt = new Option();
+                    newOpt.setOptionText(optDTO.getOptionText());
+                    newOpt.setCorrect(optDTO.isCorrect());
+                    question.addOption(newOpt);
+                }
+            }
+        } else if (questionDTO.getQuestionType() == QuestionType.NUMERIC) {
+            // If they changed an MCQ to a NUMERIC question, delete all old options
+            question.getOptions().clear();
+        }
+
         questionRepo.save(question);
     }
 
-    public List<QuestionResponseDTO> getAllQuestionsByExam(Long examId){
-        List<Question> qs = questionRepo.findByExamId(examId).orElseThrow(()->
-                new RuntimeException("Exam not found with ID: "+examId));
-
-        return qs.stream().map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-
+    public QuestionResponseDTO getQuestionById(long questionId){
+        Question question = questionRepo.findById(questionId).orElseThrow(()->
+                new RuntimeException("Question not found with ID: "+questionId));
+        return convertToResponseDTO(question);
     }
+
+    public List<QuestionResponseDTO> getAllQuestionsByExam(Long examId){
+        // FIX: Removed .orElseThrow() since the repository now correctly returns a List
+        List<Question> qs = questionRepo.findByExamId(examId);
+
+        return qs.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
+    }
+
+
 
     /**
      * Convert Question entity to QuestionResponseDTO
@@ -149,7 +155,9 @@ public class QuestionService {
             .questionType(question.getQuestionType())
             .marks(question.getMarks())
             .questionOrder(question.getQuestionOrder())
+                .numericAnswer(question.getNumericAnswer())
             .examId(question.getExam().getId())
+
             .options(question.getOptions().stream()
                 .map(this::convertOptionToResponseDTO)
                 .collect(Collectors.toList()))

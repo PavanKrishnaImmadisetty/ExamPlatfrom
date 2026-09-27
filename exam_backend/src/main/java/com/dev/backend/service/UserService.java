@@ -9,6 +9,7 @@ import com.dev.backend.enums.Role;
 import com.dev.backend.enums.Status;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -77,6 +78,47 @@ public class UserService {
         return jWTService.generateToken(userDetails);
 
 
+    }
+
+    public Map<String, Long> getUserStats() {
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("totalUsers", userRepo.count());
+        stats.put("totalAdmins", userRepo.countByRole(Role.ADMIN));
+        stats.put("totalInstructors", userRepo.countByRole(Role.INSTRUCTOR));
+        stats.put("totalStudents", userRepo.countByRole(Role.STUDENT));
+
+        // New status counts
+        stats.put("totalActive", userRepo.countByStatus(Status.ACTIVE));
+        stats.put("totalInactive", userRepo.countByStatus(Status.INACTIVE));
+        return stats;
+    }
+
+    @Transactional
+    public void updateUserRole(Long userId, Role newRole) {
+        User user = userRepo.findById(userId).orElseThrow(() ->
+                new RuntimeException("User not found with ID: " + userId));
+
+        user.setRole(newRole);
+        userRepo.save(user); // Hibernate dirty checking will auto-update this
+    }
+
+    /**
+     * Toggle user status (Active <-> Inactive)
+     */
+    @Transactional
+    public String toggleUserStatus(Long userId) {
+        User user = userRepo.findById(userId).orElseThrow(() ->
+                new RuntimeException("User not found with ID: " + userId));
+
+        // Toggle the status
+        if (user.getStatus() == Status.ACTIVE) {
+            user.setStatus(Status.INACTIVE);
+        } else {
+            user.setStatus(Status.ACTIVE);
+        }
+
+        userRepo.save(user);
+        return user.getStatus().name();
     }
 
     /**
