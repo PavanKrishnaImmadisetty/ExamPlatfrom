@@ -1,0 +1,19 @@
+# Spring Boot
+exam_backend/target/
+exam_backend/.mvn/
+exam_backend/mvnw
+exam_backend/mvnw.cmd
+*.class
+*.jar
+*.war
+
+# React
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env
+
+# IDEs and OS files
+.idea/
+.vscode/
+.DS_Store

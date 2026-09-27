@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/frontend/src/services/attemptService.js">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/frontend/src/services/attemptService.js" />
+              <option name="newFile" value="true" />
+              <option name="updatedContent" value="import api from './api';&#10;&#10;export const attemptService = {&#10;  startAttempt: (examId) =&gt; api.post(`/api/attempt/start/${examId}`),&#10;  getAttemptByExam: (examId) =&gt; api.get(`/api/attempt/exam/${examId}`),&#10;  getResponses: (attemptId) =&gt; api.get(`/api/attempt/${attemptId}/responses`),&#10;  submitResponse: (attemptId, payload) =&gt; api.post(`/api/attempt/${attemptId}/response`, payload),&#10;  submitAttempt: (attemptId) =&gt; api.post(`/api/attempt/${attemptId}/submit`),&#10;  getAttemptById: (attemptId) =&gt; api.get(`/api/attempt/${attemptId}`),&#10;};&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
