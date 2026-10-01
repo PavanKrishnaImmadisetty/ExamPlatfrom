@@ -13,12 +13,23 @@ const getRoleRoute = (role) =>
   ROLE_ROUTES[role?.toUpperCase()] ?? "/admin/dashboard";
 
 export default function Login() {
-  const { login, isAuthenticated, role: currentRole } = useAuth();
+  const {
+    login,
+    isAuthenticated,
+    role: currentRole,
+    loading: authLoading,
+  } = useAuth();
+
   const navigate = useNavigate();
+
   const location = useLocation();
   const from = location.state?.from?.pathname;
 
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+  });
+
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,11 +37,10 @@ export default function Login() {
 
   // If already logged in, redirect directly to role dashboard
   useEffect(() => {
-    if (isAuthenticated && currentRole) {
-      const destination = from || getRoleRoute(currentRole);
-      navigate(destination, { replace: true });
+    if (!authLoading && isAuthenticated && currentRole) {
+      navigate(getRoleRoute(currentRole), { replace: true });
     }
-  }, [isAuthenticated, currentRole, from, navigate]);
+  }, [authLoading, isAuthenticated, currentRole, navigate]);
 
   const validate = () => {
     const next = {};

@@ -12,6 +12,7 @@
 
 import axios from "axios";
 
+
 // ---------------------------------------------------------------------------
 // Axios instance
 // If you already have a configured instance (with baseURL + JWT interceptor)
@@ -20,7 +21,7 @@ import axios from "axios";
 // and replace every `axiosInstance` call below with your import name.
 // ---------------------------------------------------------------------------
 const axiosInstance = axios.create({
-  baseURL: "https://examplatfrom.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL,
   headers: { "Content-Type": "application/json" },
 });
 
