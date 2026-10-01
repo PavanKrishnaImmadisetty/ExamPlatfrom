@@ -14,7 +14,7 @@ exam_backend/mvnw.cmd
 frontend/node_modules/
 frontend/build/
 frontend/dist/
-frontend/.env
+**/.env
 
 # IDEs and OS files
 .idea/
