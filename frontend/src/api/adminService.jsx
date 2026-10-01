@@ -20,7 +20,7 @@ import axios from "axios";
 // and replace every `axiosInstance` call below with your import name.
 // ---------------------------------------------------------------------------
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8081",
+  baseURL: "https://examplatfrom.onrender.com",
   headers: { "Content-Type": "application/json" },
 });
 

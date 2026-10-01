@@ -6,7 +6,9 @@ exam_backend/mvnw.cmd
 *.class
 *.jar
 *.war
-exam_backend\src\main\resources\application.properties
+
+**/application.properties
+
 
 # React
 frontend/node_modules/

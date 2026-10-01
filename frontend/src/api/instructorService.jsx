@@ -20,7 +20,7 @@ import axios from "axios";
 // Axios instance — swap with your own if you have one already configured
 // ---------------------------------------------------------------------------
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8081",
+  baseURL: "https://examplatfrom.onrender.com",
   headers: { "Content-Type": "application/json" },
 });
 
