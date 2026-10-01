@@ -11,6 +11,7 @@
  */
 
 import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   LayoutDashboard,
   Users,
@@ -77,11 +78,16 @@ function SidebarLink({ to, icon: Icon, label, onClick }) {
 // ---------------------------------------------------------------------------
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   function handleLogout() {
-    localStorage.removeItem("token");
+    logout();
     navigate("/login");
   }
+
+  const displayName = user?.name || user?.username || "Administrator";
+  const displayEmail = user?.email || user?.username || "admin@edu.com";
+  const initial = displayName.charAt(0).toUpperCase();
 
   const sidebarContent = (
     <aside className="flex flex-col h-full w-64 bg-white border-r border-[#EAECF0]">
@@ -152,13 +158,13 @@ export default function Sidebar({ isOpen, onClose }) {
       <div className="px-4 py-4 border-t border-[#EAECF0]">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-[#F1EDFF] flex items-center justify-center text-xs font-semibold text-[#6C3FF5] flex-shrink-0">
-            A
+            {initial}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium text-[#182033] truncate">
-              Administrator
+              {displayName}
             </p>
-            <p className="text-xs text-[#98A2B3] truncate">admin@edu.com</p>
+            <p className="text-xs text-[#98A2B3] truncate">{displayEmail}</p>
           </div>
         </div>
       </div>

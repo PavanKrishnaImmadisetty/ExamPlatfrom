@@ -6,11 +6,14 @@ import RoleGuard       from "../components/guards/RoleGuard";
 import Login  from "../Pages/auth/Login";
 import Signup from "../Pages/auth/Signup";
  
+import { useAuth } from "../context/AuthContext";
+
 // Admin
-import AdminLayout    from "../components/layout/AdminLayout";
-import AdminDashboard from "../Pages/admin/AdminDashboard";
-import UserManagement from "../Pages/admin/UserManagement";
- 
+import AdminLayout      from "../components/layout/AdminLayout";
+import AdminDashboard   from "../Pages/admin/AdminDashboard";
+import UserManagement   from "../Pages/admin/UserManagement";
+import AdminPlaceholder  from "../Pages/admin/AdminPlaceholder";
+
 // Instructor
 import InstructorLayout    from "../components/layout/InstructorLayout";
 import InstructorDashboard from "../Pages/instructor/InstructorDashboard";
@@ -18,7 +21,7 @@ import CreateExam          from "../Pages/instructor/CreateExam";
 import ExamDetails         from "../Pages/instructor/ExamDetails";
 import ManageQuestions     from "../Pages/instructor/ManageQuestions";
 import InstructorCourses   from "../Pages/instructor/InstructorCourses";
- 
+
 // Student
 import StudentLayout    from "../components/layout/StudentLayout";
 import StudentDashboard from "../Pages/student/StudentDashboard";
@@ -26,7 +29,7 @@ import TakeExam          from "../Pages/student/TakeExam";
 import ExamResult        from "../Pages/student/ExamResult";
 import MyResults         from "../Pages/student/MyResults";
 import ResultAnalysis    from "../Pages/student/ResultAnalysis";
- 
+
 // ── Placeholder — replace with a real 403 page if you have one ───────────
 const Unauthorized = () => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F8F7FC]">
@@ -37,29 +40,51 @@ const Unauthorized = () => (
     </a>
   </div>
 );
+
+// Redirects "/" or "/dashboard" to appropriate role dashboard
+const DashboardRedirect = () => {
+  const { isAuthenticated, role, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  const normalizedRole = role?.toUpperCase().replace(/^ROLE_/, "");
+  if (normalizedRole === "ADMIN") return <Navigate to="/admin/dashboard" replace />;
+  if (normalizedRole === "INSTRUCTOR") return <Navigate to="/instructor/dashboard" replace />;
+  return <Navigate to="/student/dashboard" replace />;
+};
 // ───────────────────────────────────────────────────────────────────────────
- 
+
 export default function AppRoutes() {
   return (
     <Routes>
- 
+
       {/* ── Public ─────────────────────────────────────────────────────── */}
       <Route path="/login"        element={<Login />} />
       <Route path="/signup"       element={<Signup />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route path="/"             element={<Navigate to="/login" replace />} />
- 
+      <Route path="/"             element={<DashboardRedirect />} />
+      <Route path="/dashboard"    element={<DashboardRedirect />} />
+
       {/* ── Protected (authenticated) ──────────────────────────────────── */}
       <Route element={<ProtectedRoute />}>
- 
+
         {/* ── ADMIN ── */}
         <Route
           element={<RoleGuard allowedRoles={["ADMIN"]} redirectTo="/unauthorized" />}
         >
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="users"     element={<UserManagement />} />
+            <Route path="dashboard"   element={<AdminDashboard />} />
+            <Route path="users"       element={<UserManagement />} />
+            <Route path="courses"     element={<AdminPlaceholder title="Courses" />} />
+            <Route path="assignments" element={<AdminPlaceholder title="Assignments" />} />
+            <Route path="settings"    element={<AdminPlaceholder title="Settings" />} />
+            <Route path="help"        element={<AdminPlaceholder title="Help" />} />
           </Route>
         </Route>
  

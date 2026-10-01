@@ -1,18 +1,19 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const ROLE_ROUTES = {
+  ADMIN: "/admin/dashboard",
   INSTRUCTOR: "/instructor/dashboard",
   STUDENT: "/student/dashboard",
-  USER: "/dashboard",
+  
 };
 
 const getRoleRoute = (role) =>
-  ROLE_ROUTES[role?.toUpperCase()] ?? "/dashboard";
+  ROLE_ROUTES[role?.toUpperCase()] ?? "/admin/dashboard";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, role: currentRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname;
@@ -22,6 +23,14 @@ export default function Login() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // If already logged in, redirect directly to role dashboard
+  useEffect(() => {
+    if (isAuthenticated && currentRole) {
+      const destination = from || getRoleRoute(currentRole);
+      navigate(destination, { replace: true });
+    }
+  }, [isAuthenticated, currentRole, from, navigate]);
 
   const validate = () => {
     const next = {};
@@ -40,15 +49,19 @@ export default function Login() {
     if (serverError) setServerError("");
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
     try {
-      const role = await login({ username: form.username, password: form.password });
-      const destination = from || getRoleRoute(role);
-      navigate(destination, { replace: true });
+      await login({ username: form.username, password: form.password });
+      
+      // DO NOT navigate here. 
+      // The login function updates the AuthContext. 
+      // Once the context updates, your useEffect at the top of this file 
+      // will automatically trigger and navigate the user to the correct route!
+      
     } catch (err) {
       const msg =
         err.response?.data?.message ||
@@ -56,10 +69,14 @@ export default function Login() {
         err.message ||
         "Invalid credentials. Please try again.";
       setServerError(typeof msg === "string" ? msg : "Login failed");
-    } finally {
-      setLoading(false);
-    }
+      setLoading(false); // Only stop loading if there is an error
+    } 
+    // Removed the finally block so the loading spinner stays active 
+    // while the useEffect handles the navigation transition.
   };
+      
+    
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 flex items-center justify-center p-4">

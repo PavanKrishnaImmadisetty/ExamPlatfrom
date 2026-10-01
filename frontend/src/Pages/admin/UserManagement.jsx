@@ -24,6 +24,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { getAllUsers, updateUserRole,toggleUserStatus } from "../../api/adminService";
+import { useAuth } from "../../context/AuthContext";
 
 // ---------------------------------------------------------------------------
 // Toast — minimal notification
@@ -157,6 +158,7 @@ function FilterSelect({ value, onChange, options, placeholder }) {
 // Main component
 // ---------------------------------------------------------------------------
 export default function UserManagement() {
+  const { user: currentAuthUser } = useAuth();
   const [users, setUsers]         = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
@@ -411,7 +413,13 @@ const [statusUpdating, setStatusUpdating] = useState({});
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((user) => (
+                    filtered.map((user) => {
+                      const isSelf =
+                        (currentAuthUser?.email && currentAuthUser.email === user.email) ||
+                        (currentAuthUser?.username && currentAuthUser.username === user.email) ||
+                        (currentAuthUser?.id && currentAuthUser.id === user.id);
+
+                      return (
                       <tr
                         key={user.id}
                         className="hover:bg-[#F8F7FC] transition-colors"
@@ -424,6 +432,11 @@ const [statusUpdating, setStatusUpdating] = useState({});
                             </div>
                             <span className="font-medium text-[#182033]">
                               {user.name}
+                              {isSelf && (
+                                <span className="ml-2 text-xs font-normal text-[#6C3FF5] bg-[#F1EDFF] px-2 py-0.5 rounded-full">
+                                  You
+                                </span>
+                              )}
                             </span>
                           </div>
                         </td>
@@ -460,12 +473,12 @@ const [statusUpdating, setStatusUpdating] = useState({});
                           <div className="flex items-center gap-3">
                             
                             {/* Role Select */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2" title={isSelf ? "Cannot change your own role" : undefined}>
                               <RoleSelect
                                 userId={user.id}
                                 currentRole={user.role}
                                 onUpdate={handleRoleUpdate}
-                                disabled={!!roleUpdating[user.id] || !!statusUpdating[user.id]}
+                                disabled={isSelf || !!roleUpdating[user.id] || !!statusUpdating[user.id]}
                               />
                               {roleUpdating[user.id] && (
                                 <RefreshCw
@@ -476,10 +489,10 @@ const [statusUpdating, setStatusUpdating] = useState({});
                             </div>
 
                             {/* 4. NEW: Status Toggle Button */}
-                            <div className="flex items-center gap-2 border-l border-[#EAECF0] pl-3">
+                            <div className="flex items-center gap-2 border-l border-[#EAECF0] pl-3" title={isSelf ? "Cannot deactivate your own account" : undefined}>
                               <button
                                 onClick={() => handleStatusUpdate(user.id, user.status)}
-                                disabled={!!statusUpdating[user.id] || !!roleUpdating[user.id]}
+                                disabled={isSelf || !!statusUpdating[user.id] || !!roleUpdating[user.id]}
                                 className={[
                                   "px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
                                   user.status === "ACTIVE" 
@@ -501,7 +514,8 @@ const [statusUpdating, setStatusUpdating] = useState({});
                           </div>
                         </td>
                       </tr>
-                    ))
+                    );
+                  })
                   )}
                 </tbody>
               </table>

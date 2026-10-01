@@ -12,6 +12,7 @@ import java.util.Date;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
+import com.dev.backend.model.User;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +33,13 @@ public class JWTService {
         extraClaims.put("roles", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList());
+
+        if (userDetails instanceof User user) {
+            extraClaims.put("userId", user.getId());
+            extraClaims.put("name", user.getName());
+            extraClaims.put("email", user.getEmail());
+            extraClaims.put("role", user.getRole().name());
+        }
 
         return Jwts.builder()
                 .claims(extraClaims)

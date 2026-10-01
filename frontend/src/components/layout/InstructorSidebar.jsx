@@ -21,6 +21,8 @@ import {
   GraduationCap,
 } from "lucide-react";
 
+import {useAuth} from "../../context/AuthContext";
+
 // ---------------------------------------------------------------------------
 // Nav config
 // ---------------------------------------------------------------------------
@@ -72,9 +74,11 @@ function SidebarLink({ to, icon: Icon, label, onClick }) {
 // ---------------------------------------------------------------------------
 export default function InstructorSidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
+  const {logout} = useAuth();
 
   function handleLogout() {
-    localStorage.removeItem("token");
+    // localStorage.removeItem("token");
+    logout();
     navigate("/login");
   }
 
