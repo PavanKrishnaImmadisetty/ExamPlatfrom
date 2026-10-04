@@ -76,7 +76,7 @@ function SidebarLink({ to, icon: Icon, label, onClick }) {
 // ---------------------------------------------------------------------------
 export default function StudentSidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const {logout} = useAuth();
+  const {user,logout} = useAuth();
 
   function handleLogout() {
     // localStorage.removeItem("token");
@@ -149,7 +149,7 @@ export default function StudentSidebar({ isOpen, onClose }) {
               Student
             </p>
             <p className="text-xs text-[#98A2B3] truncate">
-              student@edu.com
+              {user.email}
             </p>
           </div>
         </div>
